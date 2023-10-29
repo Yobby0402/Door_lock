@@ -122,7 +122,7 @@ class FPM383C:
                                                   'APL': b'\x00\x03', 'IC': b'\x0e',
                                                   'CC': ['00', '01', '18', '1a', '1b'],
                                                   'FD': "Write the module register."},
-                                     'ReadSysPage': {'IPL': b'\x00\x03',
+                                     'ReadSysPara': {'IPL': b'\x00\x03',
                                                      'APL': b'\x00\x13', 'IC': b'\x0f', 'CC': ['00', '01'],
                                                      'FD': "Read the basic parameters of the module (baud rate, packet size, etc.)."},
                                      'ReadINFpage': {'IPL': b'\x00\x03',
@@ -147,6 +147,13 @@ class FPM383C:
                                                'FD': "Set the sensor into sleep mode."},
                                      }
         
-        self.model_instructions = { 'Cancel':
-        }
+        self.model_instructions = {'Cancel': {'IPL': b'\x00\x03', 'APL': b'\x03', 'IC': '\x30', 'CC': ['00', '01', '31'],
+                                              'FD': 'Cancel auto-enrollment templates and auto-verify fingerprints. This feature is supported if the encryption level is set to 0 or 1 in Table 2-1.'},
+                                   'AutoEnroll': {'IPL': b'\x00\x08', 'APL': b'\x05', 'IC': '\x31',
+                                                  'CC': ['00', '01', '07', '0a', '0b', '1f', '22', '25', '26', '27', '31'],
+                                                  'FD': 'One-stop fingerprint registration, including functions such as collecting fingerprints, generating features, combining templates, and storing templates. This feature is supported if the encryption level is set to 0 or 1 in Table 2-1.'},
+                                   'AutoIdentify': {'IPL': b'\x00\x08', 'APL': b'\x08', 'IC': '\x32',
+                                                    'CC': ['00', '01', '07', '09', '0b', '17', '23', '24', '26', '27', '31'],
+                                                    'FD': 'One-stop fingerprint registration,including'}
+                                   }
         

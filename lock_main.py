@@ -23,7 +23,7 @@ def update_entry(json_file, key, new_value):
         with open(json_file, 'r') as file:
             data = ujson.load(file)
     except:
-        print("JSONÎÄ¼ş²»´æÔÚ»òÎŞ·¨¶ÁÈ¡")
+        print("JSONæ–‡ä»¶ä¸å­˜åœ¨æˆ–æ— æ³•è¯»å–")
         return None
     
     if key in data:
@@ -32,7 +32,7 @@ def update_entry(json_file, key, new_value):
         with open(json_file, 'w') as file:
             ujson.dump(data, file)
     else:
-        print("Key²»´æÔÚ")
+        print("Keyä¸å­˜åœ¨")
 
 
 def read_entry(json_file, key):
@@ -40,13 +40,13 @@ def read_entry(json_file, key):
         with open(json_file, 'r') as file:
             data = ujson.load(file)
     except:
-        print("JSONÎÄ¼ş²»´æÔÚ»òÎŞ·¨¶ÁÈ¡")
+        print("JSONæ–‡ä»¶ä¸å­˜åœ¨æˆ–æ— æ³•è¯»å–")
         return None
     
     if key in data:
         return data[key]
     else:
-        print("Key²»´æÔÚ")
+        print("Keyä¸å­˜åœ¨")
         return None
 
 
@@ -55,7 +55,7 @@ def delete_entry(json_file, key):
         with open(json_file, 'r') as file:
             data = ujson.load(file)
     except:
-        print("JSONÎÄ¼ş²»´æÔÚ»òÎŞ·¨¶ÁÈ¡")
+        print("JSONæ–‡ä»¶ä¸å­˜åœ¨æˆ–æ— æ³•è¯»å–")
         return None
     
     if key in data:
@@ -64,11 +64,12 @@ def delete_entry(json_file, key):
         with open(json_file, 'w') as file:
             ujson.dump(data, file)
     else:
-        print("Key²»´æÔÚ")
+        print("Keyä¸å­˜åœ¨")
 
 
 class Player:
     def __init__(self):
+        self.music_name = None
         self.uart = UART(1, 9600, tx=26, rx=27)
     
     def volume_set(self, volume):
@@ -79,14 +80,29 @@ class Player:
         if self.music_name is not None:
             self.uart.write(b'A7:' + self.music_name)
         else:
-            print('ÒôÀÖÃû³ÆÓĞÎó')
+            print('éŸ³ä¹åç§°æœ‰è¯¯')
+
 
 class Server:
     def __init__(self):
-        self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.request_path = None
+        self.request_method = None
+        self.request_parts = None
+        
+        try:
+            self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        except OSError:
+            pass
         self.wlan = network.WLAN(network.STA_IF)
+        
+        self.request_lines = ''
+        self.request_line = []
+        
         if not self.wlan.active():
             self.wlan.active(True)
+        
+        self.do_connect()
+        self.creat_server()
     
     def do_connect(self):
         if not self.wlan.isconnected():
@@ -110,6 +126,66 @@ class Server:
                 self.s.listen(1)
             finally:
                 print('Successfully creat socket server!')
-                
     
+    def handle_request(self, conn, request):
+        self.request_lines = request.split('\r\n')
+        # print('Request line' + str(self.request_lines))
         
+        if len(self.request_lines) > 0:
+            self.request_line = self.request_lines[0]
+            self.request_parts = self.request_line.split(' ')
+        
+        if len(self.request_parts) == 3:
+            self.request_method = self.request_parts[0]
+            print('Request method' + str(self.request_method))
+            self.request_path = self.request_parts[1]
+            print('Request path' + str(self.request_path))
+            
+            if self.request_method == 'GET' and self.request_path == '/password':
+                # è¿”å›HTMLç•Œé¢
+                html_response = '''
+                                <html>
+                <body>
+                    <h1>Control Panel</h1>
+                    <form method="POST" action="/">
+                        <label for="distance">423ç”µå­é—¨é”</label>
+                        <input type="number" id="password" name="password" pattern="[0-9]{6}" required><br><br>
+                        <input type="submit" value="Submit">
+                    </form>
+                    <br>
+                </body>
+                </html>
+                '''
+                conn.send(html_response)
+            
+            elif self.request_method == 'POST' and self.request_path == '/':
+                # å¤„ç†è¡¨å•æäº¤
+                content_length = 0
+                for line in self.request_lines:
+                    if 'Content-Length' in line:
+                        content_length = int(line.split(': ')[1])
+                        print(content_length)
+                        break
+                
+                if content_length > 0:
+                    form_data = self.request_lines[-1]
+                    # åœ¨è¿™é‡Œä½ å¯ä»¥å¤„ç†è¡¨å•æ•°æ®ï¼Œå¦‚æå–å¯†ç ç­‰
+                    print('Form data:', form_data)
+                
+                # è¿”å›å“åº”ç»™æµè§ˆå™¨
+                response = '''HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n
+                                    <!-- å“åº”å†…å®¹ -->
+                                    '''
+                conn.send(response)
+                conn.close()
+    
+    def server_loop(self):
+        conn, addr = self.s.accept()
+        request_data = conn.recv(1024).decode('utf-8')
+        self.handle_request(conn, request_data)
+
+
+if __name__ == '__main__':
+    Server_class = Server()
+    while True:
+        Server_class.server_loop()
