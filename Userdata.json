@@ -1,17 +1,17 @@
 {
   "RYK": {
     "name": "任熠恺",
-    "dooring": "000001",
+    "dooring": "00001",
     "type": "administrative",
     "password": "942694",
     "code_outdoor": "4298",
     "ID": "18595752402",
     "finger_ID": null,
-    "level": "老公"
+    "level": "尊敬的"
   },
   "WS": {
     "name": "魏帅",
-    "dooring": "000002",
+    "dooring": "00002",
     "type": "user",
     "password": "001010",
     "code_outdoor": "2315",
@@ -21,7 +21,7 @@
   },
   "CJH": {
     "name": "陈继辉",
-    "dooring": "000003",
+    "dooring": "00003",
     "type": "user",
     "password": "112011",
     "code_outdoor": "2672",
@@ -31,65 +31,132 @@
   },
   "ZSL": {
     "name": "张世龙",
-    "dooring": "000004",
+    "dooring": "00004",
     "type": "user",
     "password": null,
     "code_outdoor": null,
     "ID": null,
-    "finger_ID": null
+    "finger_ID": null,
+    "level": null
   },
   "HSL": {
     "name": "黄世龙",
-    "dooring": "000005",
+    "dooring": "00005",
     "type": "user",
     "password": null,
     "code_outdoor": null,
     "ID": null,
-    "finger_ID": null
+    "finger_ID": null,
+    "level": null
   },
   "GX": {
     "name": "郭旭",
-    "dooring": "000006",
+    "dooring": "00006",
     "type": "user",
     "password": "516822",
     "code_outdoor": "0522",
     "ID": "guoxu516822",
-    "finger_ID": null
+    "finger_ID": null,
+    "level": null
   },
   "HSA": {
     "name": "郝申奥",
-    "dooring": "000007",
+    "dooring": "00007",
     "type": "user",
-    "password": null,
-    "code_outdoor": null,
-    "ID": null,
-    "finger_ID": null
+    "password": "141516",
+    "code_outdoor": "1516",
+    "ID": "twhg20271001",
+    "finger_ID": null,
+    "level": "教主"
   },
   "SYD": {
     "name": "宋永栋",
-    "dooring": "000008",
+    "dooring": "00008",
     "type": "user",
     "password": "001215",
     "code_outdoor": "1215",
     "ID": "13522221618",
-    "finger_ID": null
+    "finger_ID": null,
+    "level": "热爱健身的卑微打工仔"
   },
   "JLY": {
     "name": "贾璐园",
-    "dooring": "000009",
+    "dooring": "00009",
     "type": "user",
     "password": null,
     "code_outdoor": null,
     "ID": null,
-    "finger_ID": null
+    "finger_ID": null,
+    "level": null
   },
   "HYM": {
-    "name": "黄世龙",
-    "dooring": "000005",
+    "name": "霍彦明",
+    "dooring": "00010",
     "type": "user",
     "password": null,
     "code_outdoor": null,
     "ID": null,
-    "finger_ID": null
+    "finger_ID": null,
+    "level": "尊敬的教授"
+  },
+  "BCL": {
+    "name": "鲍成龙",
+    "dooring": "00011",
+    "type": "user",
+    "password": null,
+    "code_outdoor": null,
+    "ID": null,
+    "finger_ID": null,
+    "level": "学长"
+  },
+  "ZTY": {
+    "name": "张泰岩",
+    "dooring": "00012",
+    "type": "user",
+    "password": null,
+    "code_outdoor": null,
+    "ID": null,
+    "finger_ID": null,
+    "level": "学长"
+  },
+  "WHL": {
+    "name": "王汉林",
+    "dooring": "00013",
+    "type": "user",
+    "password": null,
+    "code_outdoor": null,
+    "ID": null,
+    "finger_ID": null,
+    "level": "学长"
+  },
+  "ZG": {
+    "name": "张果",
+    "dooring": "00014",
+    "type": "user",
+    "password": null,
+    "code_outdoor": null,
+    "ID": null,
+    "finger_ID": null,
+    "level": "学妹"
+  },
+  "MJJ": {
+    "name": "马佳静",
+    "dooring": "00015",
+    "type": "user",
+    "password": null,
+    "code_outdoor": null,
+    "ID": null,
+    "finger_ID": null,
+    "level": "学妹"
+  },
+  "ZJW": {
+    "name": "赵金文",
+    "dooring": "00016",
+    "type": "user",
+    "password": null,
+    "code_outdoor": null,
+    "ID": null,
+    "finger_ID": null,
+    "level": "同学"
   }
 }
