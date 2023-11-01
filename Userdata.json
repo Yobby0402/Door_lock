@@ -1,0 +1,93 @@
+{
+  "RYK": {
+    "name": "任熠恺",
+    "dooring": "000001",
+    "type": "administrative",
+    "password": "942694",
+    "code_outdoor": "4298",
+    "ID": "18595752402",
+    "finger_ID": null,
+    ""
+  },
+  "WS": {
+    "name": "魏帅",
+    "dooring": "000002",
+    "type": "user",
+    "password": "001010",
+    "code_outdoor": "2315",
+    "ID": "18333163373",
+    "finger_ID": null
+  },
+  "CJH": {
+    "name": "陈继辉",
+    "dooring": "000003",
+    "type": "user",
+    "password": "112011",
+    "code_outdoor": "2672",
+    "ID": "867747053",
+    "finger_ID": null
+  },
+  "ZSL": {
+    "name": "张世龙",
+    "dooring": "000004",
+    "type": "user",
+    "password": null,
+    "code_outdoor": null,
+    "ID": null,
+    "finger_ID": null
+  },
+  "HSL": {
+    "name": "黄世龙",
+    "dooring": "000005",
+    "type": "user",
+    "password": null,
+    "code_outdoor": null,
+    "ID": null,
+    "finger_ID": null
+  },
+  "GX": {
+    "name": "郭旭",
+    "dooring": "000006",
+    "type": "user",
+    "password": "516822",
+    "code_outdoor": "0522",
+    "ID": "guoxu516822",
+    "finger_ID": null
+  },
+  "HSA": {
+    "name": "郝申奥",
+    "dooring": "000007",
+    "type": "user",
+    "password": null,
+    "code_outdoor": null,
+    "ID": null,
+    "finger_ID": null
+  },
+  "SYD": {
+    "name": "宋永栋",
+    "dooring": "000008",
+    "type": "user",
+    "password": null,
+    "code_outdoor": null,
+    "ID": null,
+    "finger_ID": null
+  },
+  "JLY": {
+    "name": "贾璐园",
+    "dooring": "000009",
+    "type": "user",
+    "password": null,
+    "code_outdoor": null,
+    "ID": null,
+    "finger_ID": null
+  },
+  "HYM": {
+    "name": "黄世龙",
+    "dooring": "000005",
+    "type": "user",
+    "password": null,
+    "code_outdoor": null,
+    "ID": null,
+    "finger_ID": null
+  }
+}

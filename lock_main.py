@@ -7,64 +7,49 @@ lock = Pin(15, Pin.OUT)
 lock.value(0)
 
 
-def add_entry(json_file, key, value):
-    try:
-        with open(json_file, 'r') as file:
-            data = ujson.load(file)
-    except:
-        data = {}
-    data[key] = value
-    with open(json_file, 'w') as file:
-        ujson.dump(data, file)
-
-
-def update_entry(json_file, key, new_value):
-    try:
-        with open(json_file, 'r') as file:
-            data = ujson.load(file)
-    except:
-        print("JSON文件不存在或无法读取")
-        return None
+class UserDatabase:
+    def __init__(self, file_name):
+        self.file_name = file_name
+        try:
+            with open(file_name, 'r') as f:
+                self.data = ujson.load(f)
+        except (OSError, ValueError):
+            self.data = {}
     
-    if key in data:
-        data[key] = new_value
-        
-        with open(json_file, 'w') as file:
-            ujson.dump(data, file)
-    else:
-        print("Key不存在")
-
-
-def read_entry(json_file, key):
-    try:
-        with open(json_file, 'r') as file:
-            data = ujson.load(file)
-    except:
-        print("JSON文件不存在或无法读取")
-        return None
+    def save(self):
+        with open(self.file_name, 'w') as f:
+            ujson.dump(self.data, f)
     
-    if key in data:
-        return data[key]
-    else:
-        print("Key不存在")
-        return None
-
-
-def delete_entry(json_file, key):
-    try:
-        with open(json_file, 'r') as file:
-            data = ujson.load(file)
-    except:
-        print("JSON文件不存在或无法读取")
-        return None
+    def get_file(self):
+        return self.data
     
-    if key in data:
-        del data[key]
-        
-        with open(json_file, 'w') as file:
-            ujson.dump(data, file)
-    else:
-        print("Key不存在")
+    def add_user(self, username, data):
+        if username not in self.data:
+            self.data[username] = data
+            self.save()
+            return True
+        else:
+            return False
+    
+    def get_user(self, username):
+        return self.data.get(username, None)
+    
+    def update_user(self, username, updated_data):
+        if username in self.data:
+            user_data = self.data[username]
+            user_data.update(updated_data)  # 更新用户数据
+            self.save()
+            return True
+        else:
+            return False
+    
+    def delete_user(self, username):
+        if username in self.data:
+            del self.data[username]
+            self.save()
+            return True
+        else:
+            return False
 
 
 class Player:
@@ -85,6 +70,9 @@ class Player:
 
 class Server:
     def __init__(self):
+        self.html_response = None
+        self.password = None
+        self.content_length = None
         self.request_path = None
         self.request_method = None
         self.request_parts = None
@@ -142,42 +130,45 @@ class Server:
             print('Request path' + str(self.request_path))
             
             if self.request_method == 'GET' and self.request_path == '/password':
-                # 返回HTML界面
-                html_response = '''
-                                <html>
-                <body>
-                    <h1>Control Panel</h1>
-                    <form method="POST" action="/">
-                        <label for="distance">423电子门锁</label>
-                        <input type="number" id="password" name="password" pattern="[0-9]{6}" required><br><br>
-                        <input type="submit" value="Submit">
-                    </form>
-                    <br>
-                </body>
-                </html>
-                '''
-                conn.send(html_response)
-            
-            elif self.request_method == 'POST' and self.request_path == '/':
-                # 处理表单提交
-                content_length = 0
-                for line in self.request_lines:
-                    if 'Content-Length' in line:
-                        content_length = int(line.split(': ')[1])
-                        print(content_length)
-                        break
-                
-                if content_length > 0:
-                    form_data = self.request_lines[-1]
-                    # 在这里你可以处理表单数据，如提取密码等
-                    print('Form data:', form_data)
-                
-                # 返回响应给浏览器
-                response = '''HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n
-                                    <!-- 响应内容 -->
+                # 返回输入密码界面
+                self.html_response = '''
+                                    <html>
+                                    <body>
+                                        <h1>欢迎使用</h1>
+                                        <form method="POST" action="/pwd">
+                                            <label >423电子门锁</label>
+                                            <input type="number" id="password" name="password" pattern="[0-9]{6}" required><br><br>
+                                            <input type="submit" value="Submit">
+                                        </form>
+                                        <br>
+                                    </body>
+                                    </html>
                                     '''
-                conn.send(response)
+                conn.send(self.html_response)
                 conn.close()
+            
+            elif self.request_method == 'POST':
+                self.content_length = 0
+                if self.request_path == '/pwd':
+                    for line in self.request_lines:
+                        if 'Content-Length' in line:
+                            self.content_length = int(line.split(': ')[1])
+                            break
+                    if self.content_length > 0:
+                        self.password = self.request_lines[-1].split('=')[1]
+                        # 在这里你可以处理表单数据，如提取密码等
+                        print('Form data:', self.password)
+                    
+                    # 返回响应给浏览器
+                    self.html_response = '''HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n
+                                        <html>
+                                        <body>
+                                        <h1>请在提示音后拉门把手!</h1>
+                                        </body>
+                                        </html>
+                                        '''
+                    conn.send(self.html_response)
+                    conn.close()
     
     def server_loop(self):
         conn, addr = self.s.accept()
@@ -187,5 +178,6 @@ class Server:
 
 if __name__ == '__main__':
     Server_class = Server()
-    while True:
-        Server_class.server_loop()
+    print('你好')
+    # while True:
+    #     Server_class.server_loop()
