@@ -7,7 +7,7 @@
     "code_outdoor": "4298",
     "ID": "18595752402",
     "finger_ID": null,
-    ""
+    "level": "老公"
   },
   "WS": {
     "name": "魏帅",
@@ -16,7 +16,8 @@
     "password": "001010",
     "code_outdoor": "2315",
     "ID": "18333163373",
-    "finger_ID": null
+    "finger_ID": null,
+    "level": "任熠恺的霸道老公"
   },
   "CJH": {
     "name": "陈继辉",
@@ -25,7 +26,8 @@
     "password": "112011",
     "code_outdoor": "2672",
     "ID": "867747053",
-    "finger_ID": null
+    "finger_ID": null,
+    "level": "来自德玛西亚的最强王者"
   },
   "ZSL": {
     "name": "张世龙",
@@ -67,9 +69,9 @@
     "name": "宋永栋",
     "dooring": "000008",
     "type": "user",
-    "password": null,
-    "code_outdoor": null,
-    "ID": null,
+    "password": "001215",
+    "code_outdoor": "1215",
+    "ID": "13522221618",
     "finger_ID": null
   },
   "JLY": {
