@@ -304,8 +304,9 @@ class Server:
                                         <form method="POST" action="/register">
                                           <label>用户信息修改</label>
                                           <input type="text" id="JX" name="JX" pattern="[A-Z]*" required placeholder="请输入名称首字母大写"><br><br>
+                                          <input type="text" id="old-password" name="old-password" pattern="[0-9]{6}" required placeholder="请输入旧解锁密码(六位数字)"><br><br>
                                           <input type="text" id="password" name="password" pattern="[0-9]{6}" required placeholder="请输入解锁密码(六位数字)"><br><br>
-                                          <input type="text" id="code_outdoor" name="code_outdoor" pattern="[0-9]{4}" required placeholder="请输入拨码盘密码(四位数字)"><br><br>
+ 
                                           <input type="text" id="ID" name="ID" pattern="[A-Za-z0-9]*" required placeholder="请输入身份ID,字母或数字组合"><br><br>
                                           <input type="submit" value="提交">
                                         </form>
@@ -413,7 +414,7 @@ class Server:
                         print(self.register_content)
                         self.register_name = self.register_content[self.register_content.find('=')+1:self.register_content.find('&')]
                         # &name=1&dooring=00001&password=123456&code_outdoor=1234&ID=512342312&level=12423
-                        self.register_dict = '{"'+self.register_content[self.register_content.find('&')+1:].replace('&', '","').replace('=', '":"')+'"finger_ID": null,"}'
+                        self.register_dict = '{"'+self.register_content[self.register_content.find('&')+1:].replace('&', '","').replace('=', '":"')+'"}'
                         print(self.register_dict)
                         self.db.update_user(self.register_name, eval(self.register_name))
                         conn.close()
