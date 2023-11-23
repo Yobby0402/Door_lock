@@ -35,7 +35,7 @@ class UserDatabase:
             return False
     
     def get_user(self, username):
-        return self.data.get(username, None)
+        return self.data[username]
     
     def update_user(self, username, updated_data):
         if username in self.data:
@@ -70,8 +70,10 @@ class Player:
 
 class Server:
     def __init__(self):
+        self.current_reset_key = None
+        self.user_data = None
         self.register_name = None
-        self.register_dict = None
+        self.register_dict = {}
         self.register_content = None
         self.get_data = None
         self.html_response = None
@@ -231,8 +233,8 @@ class Server:
                     lock.value(0)
                     conn.send('OK')
                     self.player.play_music('00017')
-                    
-                elif self.request_path == '/reg':
+                
+                elif self.request_path == '/reset-password':
                     self.html_response = """HTTP/1.1 200 OK\r\nContent-Type: text/html; charset=utf-8\r\n\r\n
                                         <!DOCTYPE html>
                                         <html lang="zh">
@@ -301,13 +303,11 @@ class Server:
                                         </head>
                                         <body>
                                         <h1>用户信息修改</h1>
-                                        <form method="POST" action="/register">
-                                          <label>用户信息修改</label>
+                                        <form method="POST" action="/reset-password">
+                                          <label>开锁密码修改</label>
                                           <input type="text" id="JX" name="JX" pattern="[A-Z]*" required placeholder="请输入名称首字母大写"><br><br>
                                           <input type="text" id="old-password" name="old-password" pattern="[0-9]{6}" required placeholder="请输入旧解锁密码(六位数字)"><br><br>
-                                          <input type="text" id="password" name="password" pattern="[0-9]{6}" required placeholder="请输入解锁密码(六位数字)"><br><br>
- 
-                                          <input type="text" id="ID" name="ID" pattern="[A-Za-z0-9]*" required placeholder="请输入身份ID,字母或数字组合"><br><br>
+                                          <input type="text" id="password" name="password" pattern="[0-9]{6}" required placeholder="请输入新解锁密码(六位数字)"><br><br>
                                           <input type="submit" value="提交">
                                         </form>
                                         </body>
@@ -315,15 +315,178 @@ class Server:
                                         """
                     conn.send(self.html_response)
                     conn.close()
-                    
+                
+                elif self.request_path == '/reset-code_outdoor':
+                    self.html_response = """HTTP/1.1 200 OK\r\nContent-Type: text/html; charset=utf-8\r\n\r\n
+                                        <!DOCTYPE html>
+                                        <html lang="zh">
+                                        <head>
+                                          <meta name="viewport" content="width=device-width, initial-scale=1">
+                                          <style>
+                                            body {
+                                              display: flex;
+                                              flex-direction: column;
+                                              align-items: center;
+                                              justify-content: center;
+                                              height: 100vh;
+                                              margin: 0;
+                                              background-color: aquamarine;
+                                            }
+
+                                            h1 {
+                                              text-align: center;
+                                            }
+
+                                            form {
+                                              text-align: center;
+                                              max-width: 80%;
+                                              padding: 20px;
+                                              border: 1px solid #ccc;
+                                              border-radius: 5px;
+                                              box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+                                              background-color: antiquewhite;
+                                            }
+
+                                            label {
+                                              font-size: 18px;
+                                            }
+
+                                            input[type="text"] {
+                                              width: 80%;
+                                              padding: 10px;
+                                              font-size: 16px;
+                                              border: 1px solid #ccc;
+                                              border-radius: 5px;
+                                            }
+
+                                            input[type="checkbox"] {
+                                              width: 20px;
+                                              height: 20px;
+                                            }
+
+                                            input[type="submit"] {
+                                              width: 80%;
+                                              padding: 10px;
+                                              font-size: 18px;
+                                              background-color: #007bff;
+                                              color: #fff;
+                                              border: none;
+                                              border-radius: 5px;
+                                              cursor: pointer;
+                                            }
+
+                                            @media screen and (max-width: 600px) {
+                                              form {
+                                                max-width: 90%;
+                                              }
+                                            }
+                                          </style>
+                                          <title>423门锁</title>
+                                        </head>
+                                        <body>
+                                        <h1>用户信息修改</h1>
+                                        <form method="POST" action="/reset-code_outdoor">
+                                          <label>拨盘密码修改</label>
+                                          <input type="text" id="JX" name="JX" pattern="[A-Z]*" required placeholder="请输入名称首字母大写"><br><br>
+                                          <input type="text" id="old-code_outdoor" name="old-code_outdoor" pattern="[0-9]{4}" required placeholder="请输入旧拨盘密码(四位数字)"><br><br>
+                                          <input type="text" id="code_outdoor" name="code_outdoor" pattern="[0-9]{4}" required placeholder="请输入新拨盘密码(四位数字)"><br><br>
+                                          <input type="submit" value="提交">
+                                        </form>
+                                        </body>
+                                        </html>
+                                        """
+                    conn.send(self.html_response)
+                    conn.close()
+                
+                elif self.request_path == '/forget_password':
+                    self.html_response = """HTTP/1.1 200 OK\r\nContent-Type: text/html; charset=utf-8\r\n\r\n
+                                        <!DOCTYPE html>
+                                        <html lang="zh">
+                                        <head>
+                                          <meta name="viewport" content="width=device-width, initial-scale=1">
+                                          <style>
+                                            body {
+                                              display: flex;
+                                              flex-direction: column;
+                                              align-items: center;
+                                              justify-content: center;
+                                              height: 100vh;
+                                              margin: 0;
+                                              background-color: aquamarine;
+                                            }
+
+                                            h1 {
+                                              text-align: center;
+                                            }
+
+                                            form {
+                                              text-align: center;
+                                              max-width: 80%;
+                                              padding: 20px;
+                                              border: 1px solid #ccc;
+                                              border-radius: 5px;
+                                              box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+                                              background-color: antiquewhite;
+                                            }
+
+                                            label {
+                                              font-size: 18px;
+                                            }
+
+                                            input[type="text"] {
+                                              width: 80%;
+                                              padding: 10px;
+                                              font-size: 16px;
+                                              border: 1px solid #ccc;
+                                              border-radius: 5px;
+                                            }
+
+                                            input[type="checkbox"] {
+                                              width: 20px;
+                                              height: 20px;
+                                            }
+
+                                            input[type="submit"] {
+                                              width: 80%;
+                                              padding: 10px;
+                                              font-size: 18px;
+                                              background-color: #007bff;
+                                              color: #fff;
+                                              border: none;
+                                              border-radius: 5px;
+                                              cursor: pointer;
+                                            }
+
+                                            @media screen and (max-width: 600px) {
+                                              form {
+                                                max-width: 90%;
+                                              }
+                                            }
+                                          </style>
+                                          <title>423门锁</title>
+                                        </head>
+                                        <body>
+                                        <h1>用户信息找回</h1>
+                                        <form method="POST" action="/get-password">
+                                          <label>找回密码</label>
+                                          <input type="text" id="JX" name="JX" pattern="[A-Z]*" required placeholder="请输入名称首字母大写"><br><br>
+                                          <input type="text" id="old-password" name="old-password" pattern="[0-9]{6}" required placeholder="请输入身份ID"><br><br>
+                                          <input type="submit" value="提交">
+                                        </form>
+                                        </body>
+                                        </html>
+                                        """
+                    conn.send(self.html_response)
+                    conn.close()
+            
             elif self.request_method == 'POST':
                 self.content_length = 0
+                for line in self.request_lines:
+                    if 'Content-Length' in line:
+                        self.content_length = int(line.split(': ')[1])
+                        break
+
                 if self.request_path == '/pwd':
-                    for line in self.request_lines:
-                        if 'Content-Length' in line:
-                            self.content_length = int(line.split(': ')[1])
-                            break
-                    
                     if self.content_length > 0:
                         self.password = self.request_lines[-1].split('&')[0].split('=')[1]
                         self.get_data = self.search_data('password', self.password)
@@ -359,7 +522,7 @@ class Server:
                                                   <h2>请在提示音后拉门把手</h2>
                                                 </body>
                                                 </html>
-                                                """.format(self.get_data['level'],self.get_data['name'])
+                                                """.format(self.get_data['level'], self.get_data['name'])
                             conn.send(self.html_response)
                             conn.close()
                             if 'on' in self.request_lines[-1]:
@@ -402,22 +565,94 @@ class Server:
                                                 """
                             conn.send(self.html_response)
                             conn.close()
-
-                elif self.request_path == '/register':
-                    for line in self.request_lines:
-                        if 'Content-Length' in line:
-                            self.content_length = int(line.split(': ')[1])
-                            break
-                            
+                
+                elif 'reset' in self.request_path:
                     if self.content_length > 0:
                         self.register_content = self.request_lines[-1]
                         print(self.register_content)
-                        self.register_name = self.register_content[self.register_content.find('=')+1:self.register_content.find('&')]
+                        self.register_name = self.register_content[
+                                             self.register_content.find('=') + 1:self.register_content.find('&')]
                         # &name=1&dooring=00001&password=123456&code_outdoor=1234&ID=512342312&level=12423
-                        self.register_dict = '{"'+self.register_content[self.register_content.find('&')+1:].replace('&', '","').replace('=', '":"')+'"}'
+                        self.register_dict = eval(
+                            '{"' + self.register_content[self.register_content.find('&') + 1:].replace('&',
+                                                                                                       '","').replace(
+                                '=', '":"') + '"}')
                         print(self.register_dict)
-                        self.db.update_user(self.register_name, eval(self.register_name))
+                        self.user_data = self.db.get_user(self.register_name)
+                        self.current_reset_key = self.request_path.split('-')[1]
+                        if self.user_data[self.current_reset_key] != self.register_dict[
+                            'old-' + self.current_reset_key]:
+                            self.html_response = """HTTP/1.1 200 OK\r\nContent-Type: text/html; charset=utf-8\r\n\r\n
+                                                <!DOCTYPE html>
+                                                <html>
+                                                <head>
+                                                  <meta name="viewport" content="width=device-width, initial-scale=1">
+                                                  <style>
+                                                    body {{
+                                                      display: flex;
+                                                      flex-direction: column;
+                                                      align-items: center;
+                                                      justify-content: center;
+                                                      height: 100vh;
+                                                      margin: 0;
+                                                      background-color: aquamarine;
+                                                    }}
+                                                    h1 {{
+                                                    text - align: center;
+                                                      font-size: 24px;
+                                                    }}
+                                                    h2 {{
+                                                    text - align: center;
+                                                      font-size: 18px;
+                                                    }}
+                                                  </style>
+                                                  <title>错误页面</title>
+                                                </head>
+                                                <body>
+                                                  <h1>您的密码输入有误！</h1>
+                                                  <h2>请检查后重新输入！</h2>
+                                                </body>
+                                                </html>
+                                                """
+                        else:
+                            self.user_data[self.current_reset_key] = self.register_dict[self.current_reset_key]
+                            self.db.update_user(self.register_name, self.user_data)
+                            self.html_response = """HTTP/1.1 200 OK\r\nContent-Type: text/html; charset=utf-8\r\n\r\n
+                                                <!DOCTYPE html>
+                                                <html>
+                                                <head>
+                                                  <meta name="viewport" content="width=device-width, initial-scale=1">
+                                                  <style>
+                                                    body {{
+                                                      display: flex;
+                                                      flex-direction: column;
+                                                      align-items: center;
+                                                      justify-content: center;
+                                                      height: 100vh;
+                                                      margin: 0;
+                                                      background-color: aquamarine;
+                                                    }}
+                                                    h1 {{
+                                                    text - align: center;
+                                                      font-size: 24px;
+                                                    }}
+                                                    h2 {{
+                                                    text - align: center;
+                                                      font-size: 18px;
+                                                    }}
+                                                  </style>
+                                                  <title>修改页面</title>
+                                                </head>
+                                                <body>
+                                                  <h1>修改密码成功</h1>
+                                                </body>
+                                                </html>
+                                                """
+                        conn.send(self.html_response)
                         conn.close()
+                
+                elif self.request_path == '/get-password':
+                
 
     def server_loop(self):
         while True:
