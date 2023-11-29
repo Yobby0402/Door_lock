@@ -4,7 +4,7 @@ import network
 import socket
 import ujson
 import _thread
-import ntptime
+from rotary_irq_esp import RotaryIRQ
 
 lock = Pin(15, Pin.OUT)
 lock.value(0)
@@ -53,6 +53,12 @@ class UserDatabase:
             return True
         else:
             return False
+    
+    def search_data(self, key, value):
+        for sub_dict in self.data:
+            if value == self.data[sub_dict][key]:
+                return self.data[sub_dict]
+        return None
 
 
 class Player:
@@ -84,7 +90,6 @@ class Server:
         self.request_parts = None
         
         self.db = UserDatabase()
-        self.all_user_data = self.db.get_data()
         
         self.player = Player()
         
@@ -224,14 +229,43 @@ class Server:
                                         </body>
                                         </html>
                                         '''
-                    conn.send(self.html_response)
-                    conn.close()
                 
                 elif self.request_path == '/indoor':
+                    self.html_response = """HTTP/1.1 200 OK\r\nContent-Type: text/html; charset=utf-8\r\n\r\n
+                                        <!DOCTYPE html>
+                                        <html>
+                                        <head>
+                                          <meta name="viewport" content="width=device-width, initial-scale=1">
+                                          <style>
+                                            body {{
+                                              display: flex;
+                                              flex-direction: column;
+                                              align-items: center;
+                                              justify-content: center;
+                                              height: 100vh;
+                                              margin: 0;
+                                              background-color: aquamarine;
+                                            }}
+                                            h1 {{
+                                            text - align: center;
+                                              font-size: 24px;
+                                            }}
+                                            h2 {{
+                                            text - align: center;
+                                              font-size: 18px;
+                                            }}
+                                          </style>
+                                          <title>欢迎页面</title>
+                                        </head>
+                                        <body>
+                                          <h1>欢迎{}{}</h1>
+                                          <h2>请在提示音后拉门把手</h2>
+                                        </body>
+                                        </html>
+                                        """
                     lock.value(1)
                     time.sleep(3)
                     lock.value(0)
-                    conn.send('OK')
                     self.player.play_music('00017')
                 
                 elif self.request_path == '/reset-password':
@@ -313,8 +347,6 @@ class Server:
                                         </body>
                                         </html>
                                         """
-                    conn.send(self.html_response)
-                    conn.close()
                 
                 elif self.request_path == '/reset-code_outdoor':
                     self.html_response = """HTTP/1.1 200 OK\r\nContent-Type: text/html; charset=utf-8\r\n\r\n
@@ -395,8 +427,6 @@ class Server:
                                         </body>
                                         </html>
                                         """
-                    conn.send(self.html_response)
-                    conn.close()
                 
                 elif self.request_path == '/forget_password':
                     self.html_response = """HTTP/1.1 200 OK\r\nContent-Type: text/html; charset=utf-8\r\n\r\n
@@ -470,13 +500,17 @@ class Server:
                                         <form method="POST" action="/get-password">
                                           <label>找回密码</label>
                                           <input type="text" id="JX" name="JX" pattern="[A-Z]*" required placeholder="请输入名称首字母大写"><br><br>
-                                          <input type="text" id="old-password" name="old-password" pattern="[0-9]{6}" required placeholder="请输入身份ID"><br><br>
+                                          <input type="text" id="ID" name="ID" required placeholder="请输入身份ID"><br><br>
                                           <input type="submit" value="提交">
                                         </form>
                                         </body>
                                         </html>
                                         """
+                try:
                     conn.send(self.html_response)
+                except ValueError:
+                    pass
+                finally:
                     conn.close()
             
             elif self.request_method == 'POST':
@@ -485,11 +519,11 @@ class Server:
                     if 'Content-Length' in line:
                         self.content_length = int(line.split(': ')[1])
                         break
-
+                
                 if self.request_path == '/pwd':
                     if self.content_length > 0:
                         self.password = self.request_lines[-1].split('&')[0].split('=')[1]
-                        self.get_data = self.search_data('password', self.password)
+                        self.get_data = self.db.search_data('password', self.password)
                         if self.get_data is not None:
                             self.html_response = """HTTP/1.1 200 OK\r\nContent-Type: text/html; charset=utf-8\r\n\r\n
                                                 <!DOCTYPE html>
@@ -563,22 +597,19 @@ class Server:
                                                 </body>
                                                 </html>
                                                 """
-                            conn.send(self.html_response)
-                            conn.close()
                 
-                elif 'reset' in self.request_path:
-                    if self.content_length > 0:
-                        self.register_content = self.request_lines[-1]
-                        print(self.register_content)
-                        self.register_name = self.register_content[
-                                             self.register_content.find('=') + 1:self.register_content.find('&')]
-                        # &name=1&dooring=00001&password=123456&code_outdoor=1234&ID=512342312&level=12423
-                        self.register_dict = eval(
-                            '{"' + self.register_content[self.register_content.find('&') + 1:].replace('&',
-                                                                                                       '","').replace(
-                                '=', '":"') + '"}')
-                        print(self.register_dict)
-                        self.user_data = self.db.get_user(self.register_name)
+                else:
+                    self.register_content = self.request_lines[-1]
+                    print(self.register_content)
+                    self.register_name = self.register_content[
+                                         self.register_content.find('=') + 1:self.register_content.find('&')]
+                    self.register_dict = eval(
+                        '{"' + self.register_content[self.register_content.find('&') + 1:].replace('&',
+                                                                                                   '","').replace(
+                            '=', '":"') + '"}')
+                    print(self.register_dict)
+                    self.user_data = self.db.get_user(self.register_name)
+                    if 'reset' in self.request_path:
                         self.current_reset_key = self.request_path.split('-')[1]
                         if self.user_data[self.current_reset_key] != self.register_dict[
                             'old-' + self.current_reset_key]:
@@ -648,12 +679,52 @@ class Server:
                                                 </body>
                                                 </html>
                                                 """
-                        conn.send(self.html_response)
-                        conn.close()
-                
-                elif self.request_path == '/get-password':
-                
-
+                    
+                    elif self.request_path == '/get-password':
+                        if self.register_dict['ID'] == self.user_data["ID"]:
+                            self.html_response = """HTTP/1.1 200 OK\r\nContent-Type: text/html; charset=utf-8\r\n\r\n
+                                                <!DOCTYPE html>
+                                                <html>
+                                                <head>
+                                                  <meta name="viewport" content="width=device-width, initial-scale=1">
+                                                  <style>
+                                                    body {{
+                                                      display: flex;
+                                                      flex-direction: column;
+                                                      align-items: center;
+                                                      justify-content: center;
+                                                      height: 100vh;
+                                                      margin: 0;
+                                                      background-color: aquamarine;
+                                                    }}
+                                                    h1 {{
+                                                    text - align: center;
+                                                      font-size: 24px;
+                                                    }}
+                                                    h2 {{
+                                                    text - align: center;
+                                                      font-size: 18px;
+                                                    }}
+                                                  </style>
+                                                  <title>密码找回</title>
+                                                </head>
+                                                <body>
+                                                  <h1>欢迎{}{}</h1>
+                                                  <h2>您的开锁密码{}</h2>
+                                                  <h2>您的拨盘密码{}</h2>
+                                                </body>
+                                                </html>
+                                                """.format(self.user_data['level'],
+                                                           self.user_data['name'],
+                                                           self.user_data['password'],
+                                                           self.user_data['code_outdoor'])
+                try:
+                    conn.send(self.html_response)
+                except ValueError:
+                    pass
+                finally:
+                    conn.close()
+    
     def server_loop(self):
         while True:
             try:
@@ -664,6 +735,68 @@ class Server:
                 pass
 
 
+class RotaryLock:
+    def __init__(self):
+        self.last_time = None
+        self.max_interval_time = 30000
+        self.player = Player()
+        self.search_result = None
+        self._password_char = None
+        self.data_base = UserDatabase()
+        self.rotary_lock = RotaryIRQ(pin_num_clk=32,
+                                     pin_num_dt=33,
+                                     min_val=0,
+                                     max_val=1,
+                                     reverse=False,
+                                     range_mode=RotaryIRQ.RANGE_UNBOUNDED)
+        
+        self.current_direction = None
+        self.last_direction = None
+        
+        self._code_list = []
+        self._value_current = None
+        
+        self.rotary_lock.add_listener(self.code_outdoor_get)
+        time.sleep(1)
+    
+    def code_outdoor_get(self):
+        if self.last_time is None:
+            self.last_time = time.ticks_ms()
+        else:
+            if time.ticks_diff(self.last_time, time.ticks_ms()) > self.max_interval_time:
+                self.last_direction = None
+                self._code_list = []
+                self.current_direction = None
+        self.last_direction = self.rotary_lock.value()
+        self.rotary_lock.reset()
+        if self.current_direction == self.last_direction:
+            self._value_current += 1
+            if self._value_current == 10:
+                self._value_current = 0
+        else:
+            if self.current_direction is not None:
+                self._code_list.append(self._value_current)
+            self._value_current = 1
+            self.current_direction = self.last_direction
+        if len(self._code_list) == 4:
+            self.password_verification(self._code_list)
+            
+    def password_verification(self, password):
+        self._code_list = []
+        self.last_direction = None
+        self.current_direction = None
+        self._password_char = ''.join(map(str, password))
+        self.search_result = self.data_base.search_data("code_outdoor", self._password_char)
+        if self.search_result is not None:
+            self.player.play_music(self.search_result['dooring'])
+            lock.value(1)
+            time.sleep(3)
+            lock.value(0)
+        else:
+            self.player.play_music('00099')
+
+
 if __name__ == '__main__':
-    Server_class = Server()
-    _thread.start_new_thread(Server_class.server_loop, ())
+    # Server_class = Server()
+    Rotary_class = RotaryLock()
+    # _thread.start_new_thread(Server_class.server_loop, ())
