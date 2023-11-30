@@ -12,7 +12,7 @@ lock = Pin(15, Pin.OUT)
 lock.value(0)
 
 def time_sync():
-
+    time.localtime()
 
 
 def write_record_file(record):
