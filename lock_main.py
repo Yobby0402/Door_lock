@@ -5,9 +5,20 @@ import socket
 import ujson
 import _thread
 from rotary_irq_esp import RotaryIRQ
+import os
+import ntptime
 
 lock = Pin(15, Pin.OUT)
 lock.value(0)
+
+def time_sync():
+
+
+
+def write_record_file(record):
+    try:
+        timestamp = time.time()
+
 
 
 class UserDatabase:
