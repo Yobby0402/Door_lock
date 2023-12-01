@@ -29,7 +29,7 @@ PASTTIME = 0
 # ADMINLIST = [""]
 
 
-class FINGER():
+class FINGER:
     def __init__(self, uart=1, rx=5, tx=17, freq=57600, en=16):
         self.rx = rx  # yellow wire is rx
         self.tx = tx  # black wire is tx

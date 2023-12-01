@@ -1,7 +1,7 @@
 import binascii
 import machine
 import time
-from machine import Pin
+from machine import Pin, UART
 
 
 class FPM383C:
@@ -13,6 +13,8 @@ class FPM383C:
     """
     
     def __init__(self, uart_obj, en=None, touch_out=None, device_address=None):
+        self._received_confirmation_code = None
+        self._return_message = None
         if isinstance(uart_obj, machine.UART):
             self.uart = uart_obj
         else:
@@ -22,7 +24,8 @@ class FPM383C:
         if en is not None:
             self.en = en
             self.en_pin = Pin(self.en, Pin.OUT)
-            self.en_pin.value(1)  # According to the user manual, this module is best equipped with a separate power supply circuit and uses MOS-FET to control the power supply
+            self.en_pin.value(
+                1)  # According to the user manual, this module is best equipped with a separate power supply circuit and uses MOS-FET to control the power supply
             self.model_init()
         else:
             self.en = None
@@ -101,7 +104,7 @@ class FPM383C:
                                   '31': "The functionality does not match the encryption level",
                                   '32': "The key is locked",
                                   '33': "The image area is too small"}
-        
+    
     def model_init(self):
         """
         This function is called when you have been equipped with a separate power supply circuit and use a pin to control the device's power.
@@ -135,24 +138,24 @@ class FPM383C:
             return 'Error'
         else:
             for i in range(len(self.sys_para_list)):
-                self._sys_para_dic[self.sys_para_list[i]] = self._all_para_data[i*2+2:i*2+4]
+                self._sys_para_dic[self.sys_para_list[i]] = self._all_para_data[i * 2 + 2:i * 2 + 4]
             if para_name is None:
                 return self._sys_para_dic
             else:
                 return self._sys_para_dic[para_name]
-
+    
     def cancel_direction(self):
         """
         Cancels the direction of the auto-enrollment or auto-identification.
         :return:
         """
         self._write_list = [1, 0, 3, 48, 52]
-        self.uart.write(self._header+self._device_address+bytearray(self._write_list))
-        
-    def auto_enroll(self, ID_number, enroll_times, fp_id, abc=0, apc=0, ksr=0, oid=0, fdr=0, afl=0):
+        self.uart.write(self._header + self._device_address + bytearray(self._write_list))
+    
+    def auto_enroll(self, id_number, enroll_times, abc=0, apc=0, ksr=0, oid=0, fdr=0, afl=0):
         """
         This method is to automatically enroll one fingerprint.
-        :param ID_number: ID number to enroll.
+        :param id_number: ID number to enroll.
         :param abc:Acquisition backlight control bits.0:solid LED,1:Off LED after acquisition.
         :param apc:Acquisition preprocessing control bits.0:Close preprocessing,1:Open preprocessing.
         :param ksr:Key steps return.0:Return,1:No need to return.
@@ -160,14 +163,24 @@ class FPM383C:
         :param fdr:Fingerprint duplicate registration.
         :param afl:Ask your finger to leave.
         :param enroll_times:The number of repetitions, up to a maximum of 4
-        :param fp_id:The ID number to be entered into the fingerprint.
         :return:None
         """
         self._write_list = []
-        self._write_params = int(f"0000000000{afl}{fdr}{oid}{ksr}{apc}{abc}", 2)
-        self._sum = 49+ID_number+enroll_times+self._write_params
-        self._write_conclusions = self._header + self._device_address + b'\x31'+bytearray([0, ID_number, enroll_times, self._write_params, self._sum])
-        print('Auto Enrollment Start! Sending:' + str(self._write_conclusions))
+        self._write_params = int(f"{afl}{fdr}{oid}{ksr}{apc}{abc}", 2)
+        self._sum = 58 + id_number + enroll_times + self._write_params
+        self._write_conclusions = self._header + self._device_address + b'\x01\x00\x08\x31' + bytearray(
+            [0, id_number, enroll_times, 0, self._write_params]) + self._sum.to_bytes(2, 'big')
+        print('Auto Enrollment Start! Sending:' + str(bytes(self._write_conclusions)))
+        self.uart.write(bytes(self._write_conclusions))
         while not self.uart.any():
             pass
+        self._return_message = binascii.hexlify(self.uart.read()).decode()
+        print(self._return_message)
+        print(self._return_message.split('ef01ffffffff07000526'))
+        self._received_confirmation_code = self._return_message[18:20]
         
+
+
+if __name__ == '__main__':
+    u = machine.UART(2, 57600, rx=17, tx=16)
+    f = FPM383C(u)

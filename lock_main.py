@@ -1,4 +1,4 @@
-from machine import Pin, UART
+from machine import Pin, UART, RTC
 import time
 import network
 import socket
@@ -10,15 +10,38 @@ import ntptime
 
 lock = Pin(15, Pin.OUT)
 lock.value(0)
-
-def time_sync():
-    time.localtime()
+rtc = RTC()
 
 
-def write_record_file(record):
+def time_sync(timeoffset=8 * 3600):
     try:
-        timestamp = time.time()
+        ntptime.settime()
+    except OSError:
+        pass
+    timestamp = time.time()
+    print(time.localtime(timestamp))
+    time_now = time.localtime(timestamp + timeoffset)
+    print(time_now)
+    rtc.datetime(
+        (time_now[0], time_now[1], time_now[2], time_now[6] + 1, time_now[3], time_now[4], time_now[5], time_now[7])
+    )
 
+
+def write_record(record):
+    try:
+        time_sync()
+    except OSError:
+        pass
+    _file_name = 'record.txt'
+    with open(_file_name, 'r') as file:
+        lines = file.readlines()
+    
+    if len(lines) == 300:
+        with open(_file_name, 'w') as file:
+            file.writelines(lines[1:])
+    
+    with open(_file_name, 'a') as file:
+        file.write(str(rtc.datetime())+record+'\n')
 
 
 class UserDatabase:
@@ -87,6 +110,7 @@ class Player:
 
 class Server:
     def __init__(self):
+        self.all_user_data = None
         self.current_reset_key = None
         self.user_data = None
         self.register_name = None
@@ -119,6 +143,7 @@ class Server:
         self.wlan.config(dhcp_hostname='LOCK')
         
         self.do_connect()
+        time_sync()
         self.creat_server()
     
     def do_connect(self):
@@ -275,6 +300,7 @@ class Server:
                                         </html>
                                         """
                     lock.value(1)
+                    write_record('+indoor+open')
                     time.sleep(3)
                     lock.value(0)
                     self.player.play_music('00017')
@@ -517,13 +543,97 @@ class Server:
                                         </body>
                                         </html>
                                         """
+
+                elif self.request_path == '/record':
+                    with open('record.txt', 'r') as record_file:
+                        record_lines = record_file.readlines()
+                    self.html_response = """HTTP/1.1 200 OK\r\nContent-Type: text/html; charset=utf-8\r\n\r\n
+                                                            <!DOCTYPE html>
+                                                            <html lang="zh">
+                                                            <head><title>开锁记录</title>
+                                                            </head>
+                                                            <body>
+                                                            <h1>开锁记录</h1>
+                                                            <table border='1'><tr><th>时间记录</th><th>解锁方式</th><th>操作员</th></tr>
+                                        """
+                    for line in record_lines:
+                        timestamp, unlock_type, operator = line.strip().split('+')
+                        self.html_response += f"<tr><td>{timestamp}</td><td>{unlock_type}</td><td>{operator}</td></tr>"
+                    self.html_response += "</table></body></html>"
+                
+                elif self.request_path == '/time':
+                    self.html_response = """HTTP/1.1 200 OK\r\nContent-Type: text/html; charset=utf-8\r\n\r\n
+                                            <!DOCTYPE html>
+                                            <html>
+                                            <head>
+                                              <meta name="viewport" content="width=device-width, initial-scale=1">
+                                              <style>
+                                                body {{
+                                                  display: flex;
+                                                  flex-direction: column;
+                                                  align-items: center;
+                                                  justify-content: center;
+                                                  height: 100vh;
+                                                  margin: 0;
+                                                  background-color: aquamarine;
+                                                }}
+                                                h1 {{
+                                                text - align: center;
+                                                  font-size: 24px;
+                                                }}
+                                                h2 {{
+                                                text - align: center;
+                                                  font-size: 18px;
+                                                }}
+                                              </style>
+                                              <title>错误页面</title>
+                                            </head>
+                                            <body>
+                                              <h1>当前系统时间为：</h1>
+                                              <h2>{}</h2>
+                                            </body>
+                                            </html>
+                                            """.format(str(time.localtime()))
+                
+                else:
+                    self.html_response = """HTTP/1.1 200 OK\r\nContent-Type: text/html; charset=utf-8\r\n\r\n
+                                            <!DOCTYPE html>
+                                            <html>
+                                            <head>
+                                              <meta name="viewport" content="width=device-width, initial-scale=1">
+                                              <style>
+                                                body {{
+                                                  display: flex;
+                                                  flex-direction: column;
+                                                  align-items: center;
+                                                  justify-content: center;
+                                                  height: 100vh;
+                                                  margin: 0;
+                                                  background-color: aquamarine;
+                                                }}
+                                                h1 {{
+                                                text - align: center;
+                                                  font-size: 24px;
+                                                }}
+                                                h2 {{
+                                                text - align: center;
+                                                  font-size: 18px;
+                                                }}
+                                              </style>
+                                              <title>错误页面</title>
+                                            </head>
+                                            <body>
+                                              <h1>您访问的页面不存在</h1>
+                                              <h2>请联系管理员</h2>
+                                            </body>
+                                            </html>
+                                            """
                 try:
                     conn.send(self.html_response)
                 except ValueError:
                     pass
                 finally:
                     conn.close()
-            
             elif self.request_method == 'POST':
                 self.content_length = 0
                 for line in self.request_lines:
@@ -573,6 +683,7 @@ class Server:
                             if 'on' in self.request_lines[-1]:
                                 self.player.play_music(self.get_data['dooring'])
                             lock.value(1)
+                            write_record('+WLAN+'+self.get_data['name'])
                             time.sleep(3)
                             lock.value(0)
                         else:
@@ -608,7 +719,6 @@ class Server:
                                                 </body>
                                                 </html>
                                                 """
-                
                 else:
                     self.register_content = self.request_lines[-1]
                     print(self.register_content)
@@ -735,7 +845,7 @@ class Server:
                     pass
                 finally:
                     conn.close()
-    
+
     def server_loop(self):
         while True:
             try:
@@ -791,7 +901,7 @@ class RotaryLock:
             self.current_direction = self.last_direction
         if len(self._code_list) == 4:
             self.password_verification(self._code_list)
-            
+    
     def password_verification(self, password):
         self._code_list = []
         self.last_direction = None
@@ -801,13 +911,15 @@ class RotaryLock:
         if self.search_result is not None:
             self.player.play_music(self.search_result['dooring'])
             lock.value(1)
+            write_record('+rotary+'+self.search_result["name"])
             time.sleep(3)
             lock.value(0)
         else:
             self.player.play_music('00099')
 
 
+
 if __name__ == '__main__':
-    # Server_class = Server()
+    Server_class = Server()
     Rotary_class = RotaryLock()
-    # _thread.start_new_thread(Server_class.server_loop, ())
+    _thread.start_new_thread(Server_class.server_loop, ())
