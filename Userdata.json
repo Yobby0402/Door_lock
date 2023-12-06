@@ -51,7 +51,7 @@
     "password": "516822",
     "code_outdoor": "0522",
     "ID": "guoxu516822",
-    "level": null
+    "level": ""
   },
   "HSA": {
     "name": "郝申奥",
@@ -72,14 +72,13 @@
     "level": "热爱健身的卑微打工仔"
   },
   "JLY": {
-    "name": "贾璐园",
+    "name": "贾璐圆",
     "dooring": "00009",
     "type": "user",
-    "password": null,
-    "code_outdoor": null,
-    "ID": null,
-    "finger_ID": null,
-    "level": null
+    "password": "562356",
+    "code_outdoor": "0303",
+    "ID": "18697367180",
+    "level": "铿锵玫瑰"
   },
   "HYM": {
     "name": "霍彦明",
@@ -88,7 +87,6 @@
     "password": null,
     "code_outdoor": null,
     "ID": null,
-    "finger_ID": null,
     "level": "尊敬的教授"
   },
   "BCL": {
@@ -98,7 +96,6 @@
     "password": null,
     "code_outdoor": null,
     "ID": null,
-    "finger_ID": null,
     "level": "学长"
   },
   "ZTY": {
@@ -108,7 +105,6 @@
     "password": null,
     "code_outdoor": null,
     "ID": null,
-    "finger_ID": null,
     "level": "学长"
   },
   "WHL": {
@@ -118,28 +114,25 @@
     "password": null,
     "code_outdoor": null,
     "ID": null,
-    "finger_ID": null,
     "level": "学长"
   },
   "ZG": {
     "name": "张果",
     "dooring": "00014",
     "type": "user",
-    "password": null,
-    "code_outdoor": null,
-    "ID": null,
-    "finger_ID": null,
-    "level": "学妹"
+    "password": "200102",
+    "code_outdoor": "2001",
+    "ID": "15291692480",
+    "level": "宇宙无敌超级美少女"
   },
   "MJJ": {
     "name": "马佳静",
     "dooring": "00015",
     "type": "user",
-    "password": null,
-    "code_outdoor": null,
-    "ID": null,
-    "finger_ID": null,
-    "level": "学妹"
+    "password": "130309",
+    "code_outdoor": "5577",
+    "ID": "17331525112",
+    "level": ""
   },
   "ZJW": {
     "name": "赵金文",
@@ -148,7 +141,6 @@
     "password": null,
     "code_outdoor": null,
     "ID": null,
-    "finger_ID": null,
     "level": "同学"
   }
 }

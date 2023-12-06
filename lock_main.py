@@ -100,6 +100,12 @@ class Player:
         self.music_name = None
         self.uart = UART(1, 9600, tx=26, rx=27)
         self.volume_set()
+        
+        self.finger_wav_dict = {"请放手指": '00100',
+                                "采集成功,请重新放手指": '00101',
+                                "请求超时": '00102',
+                                "指纹录入成功": '00103'
+                                }
     
     def volume_set(self, volume=31):
         self.uart.write(b'AF:{}'.format(volume))

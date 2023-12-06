@@ -13,6 +13,8 @@ class FPM383C:
     """
     
     def __init__(self, uart_obj, en=None, touch_out=None, device_address=None):
+        self._current_message = None
+        self._result_dict = None
         self._received_confirmation_code = None
         self._return_message = None
         if isinstance(uart_obj, machine.UART):
@@ -104,6 +106,58 @@ class FPM383C:
                                   '31': "The functionality does not match the encryption level",
                                   '32': "The key is locked",
                                   '33': "The image area is too small"}
+        self.confirmation_code_cn = {'00': "操作成功",
+                                     '01': "数据包接收错误",
+                                     '02': "传感器上没有手指",
+                                     '03': "无法输入指纹图像",
+                                     '04': "指纹图像过干或过浅，无法提取特征",
+                                     '05': "指纹图像过湿或过粘，无法提取特征",
+                                     '06': "指纹图像混乱，无法提取特征",
+                                     '07': "指纹图像正常，但特征点过少（或过小），无法生成特征",
+                                     '08': "指纹不匹配",
+                                     '09': "未找到指纹",
+                                     '0a': "特征合并失败",
+                                     '0b': "地址序列号超出指纹数据库范围",
+                                     '0c': "从指纹库读取模板错误或无效",
+                                     '0d': "上传特征失败",
+                                     '0e': "模块无法接收后续数据包",
+                                     '0f': "上传图像失败",
+                                     '10': "删除模板失败",
+                                     '11': "清空指纹库失败",
+                                     '12': "无法进入低功耗状态",
+                                     '13': "密码错误",
+                                     '14': "系统重置失败",
+                                     '15': "缓冲区中没有有效原始地图以生成图像",
+                                     '16': "在线升级失败",
+                                     '17': "采集间有残留指纹或手指移动",
+                                     '18': "读写FLASH错误",
+                                     '19': "随机数生成失败",
+                                     '1a': "无效的寄存器编号",
+                                     '1b': "寄存器设置不正确",
+                                     '1c': "记事本页码指定不正确",
+                                     '1d': "端口操作失败",
+                                     '1e': "自动注册失败",
+                                     '1f': "指纹库已满",
+                                     '20': "设备地址错误",
+                                     '21': "密码错误",
+                                     '22': "指纹模板不为空",
+                                     '23': "指纹模板为空",
+                                     '24': "指纹库为空",
+                                     '25': "条目数量设置不正确",
+                                     '26': "超时",
+                                     '27': "指纹已存在",
+                                     '28': "指纹特征已关联",
+                                     '29': "传感器初始化失败",
+                                     '2a': "模块信息不为空",
+                                     '2b': "模块信息为空",
+                                     '2c': "OTP操作失败",
+                                     '2d': "密钥生成失败",
+                                     '2e': "密钥不存在",
+                                     '2f': "安全算法执行失败",
+                                     '30': "安全算法加解密结果不正确",
+                                     '31': "功能与加密级别不匹配",
+                                     '32': "密钥已锁定",
+                                     '33': "图像区域太小"}
     
     def model_init(self):
         """
@@ -166,21 +220,35 @@ class FPM383C:
         :return:None
         """
         self._write_list = []
+        self._result_dict = {}
         self._write_params = int(f"{afl}{fdr}{oid}{ksr}{apc}{abc}", 2)
         self._sum = 58 + id_number + enroll_times + self._write_params
         self._write_conclusions = self._header + self._device_address + b'\x01\x00\x08\x31' + bytearray(
             [0, id_number, enroll_times, 0, self._write_params]) + self._sum.to_bytes(2, 'big')
-        print('Auto Enrollment Start! Sending:' + str(bytes(self._write_conclusions)))
+        print('Auto Enrollment Start! Sending:' + str(binascii.hexlify(self._write_conclusions)))
+        print(bytes(self._write_conclusions))
         self.uart.write(bytes(self._write_conclusions))
-        while not self.uart.any():
-            pass
-        self._return_message = binascii.hexlify(self.uart.read()).decode()
-        print(self._return_message)
-        print(self._return_message.split('ef01ffffffff07000526'))
-        self._received_confirmation_code = self._return_message[18:20]
-        
+        while True:
+            try:
+                self._return_message = binascii.hexlify(self.uart.read()).decode()
+                for self._current_message in (self._return_message[j: j + 28] for j in
+                                              range(0, len(self._return_message), 28)):
+                    self._result_dict = {'header': self._current_message[0:4],
+                                         'device_address': self._current_message[4:12],
+                                         'package_identification': self._current_message[12:14],
+                                         'package_length': self._current_message[14:18],
+                                         'conformation_code': self._current_message[18:20],
+                                         'param1': self._current_message[20:22],
+                                         'param2': self._current_message[22:24],
+                                         'check_sum': self._current_message[24:28]
+                                         }
+                    print(self._result_dict)
+            except OSError:
+                break
+            except TypeError:
+                break
 
 
 if __name__ == '__main__':
-    u = machine.UART(2, 57600, rx=17, tx=16)
+    u = machine.UART(2, 57600, rx=17, tx=16, timeout=1000)
     f = FPM383C(u)
