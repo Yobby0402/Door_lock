@@ -302,6 +302,7 @@ class FPM383C:
             [0, id_number, enroll_times, 0, self._write_params]) + self._sum.to_bytes(2, 'big')
         print('Auto Enrollment Start! Sending:' + str(binascii.hexlify(self._write_conclusions)))
         # print(bytes(self._write_conclusions))
+        self.uart.read()
         self.uart.write(bytes(self._write_conclusions))
         while True:
             try:
@@ -323,19 +324,22 @@ class FPM383C:
                                                       self._result_dict['conformation_code']])
                     if self._result_dict['param2'] == '00':
                         self.player.play_music_finger('请放手指')
+                    if self._result_dict['param2'] == 'f2' and self._result_dict['conformation_code'] == '00':
+                        self.player.play_music_finger('指纹录入成功')
+                        break
                 else:
                     self._result_dict_list.append('第{}次注册'.format(self._result_dict['param2']) +
                                                   self._auto_enroll_param1_cn[self._result_dict['param1']] +
                                                   self._auto_enroll_conformation_code_cn[
                                                       self._result_dict['conformation_code']])
-                    self.player.play_music_finger('采集成功,请重新放手指')
+                    if eval(self._result_dict['param2']) < 6:
+                        self.player.play_music_finger('采集成功,请重新放手指')
             except OSError:
                 break
             except TypeError:
                 break
             except KeyError:
                 self._result_dict_list.append('模组状态异常')
-        self.player.play_music_finger('指纹录入成功')
         return self._result_dict_list
     
     def auto_identify(self, level=3, abc=0, apc=0, ksr=0):
@@ -349,6 +353,7 @@ class FPM383C:
             [level, 255, 255, 0, self._write_params]) + self._sum.to_bytes(2, 'big')
         print('Auto Identify Start! Sending:' + str(binascii.hexlify(self._write_conclusions)))
         print(bytes(self._write_conclusions))
+        self.uart.read()
         self.uart.write(bytes(self._write_conclusions))
         while True:
             try:
@@ -373,10 +378,10 @@ class FPM383C:
                 # 判断指纹是否存在或者验证成功
                 if self._result_dict['param'] == '05' and self._result_dict['conformation_code'] == '09': #验证失败
                     self.player.play_music('00099')
+                    break
                 elif self._result_dict['param'] == '05' and self._result_dict['conformation_code'] == '00': #验证成功搜索到指纹
-                
-                
-                
+                    self.player.play_music('0' + self._result_dict['ID_number'])
+                    break
             except OSError:
                 break
             except TypeError:
