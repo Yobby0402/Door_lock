@@ -7,6 +7,7 @@ import _thread
 from rotary_irq_esp import RotaryIRQ
 import os
 import ntptime
+import Player
 
 lock = Pin(15, Pin.OUT)
 lock.value(0)
@@ -95,25 +96,6 @@ class UserDatabase:
         return None
 
 
-class Player:
-    def __init__(self):
-        self.music_name = None
-        self.uart = UART(1, 9600, tx=26, rx=27)
-        self.volume_set()
-        
-        self.finger_wav_dict = {"请放手指": '00100',
-                                "采集成功,请重新放手指": '00101',
-                                "请求超时": '00102',
-                                "指纹录入成功": '00103'
-                                }
-    
-    def volume_set(self, volume=31):
-        self.uart.write(b'AF:{}'.format(volume))
-    
-    def play_music(self, music_name):
-        self.uart.write(b'A7:{}'.format(music_name))
-
-
 class Server:
     def __init__(self):
         self.all_user_data = None
@@ -132,7 +114,7 @@ class Server:
         
         self.db = UserDatabase()
         
-        self.player = Player()
+        self.player = Player
         
         try:
             self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
