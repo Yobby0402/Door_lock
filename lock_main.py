@@ -848,7 +848,7 @@ class RotaryLock:
     def __init__(self):
         self.last_time = None
         self.max_interval_time = 30000
-        self.player = Player()
+        self.player = Player
         self.search_result = None
         self._password_char = None
         self.data_base = UserDatabase()

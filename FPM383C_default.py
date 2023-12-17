@@ -338,7 +338,7 @@ class FPM383C:
         self.player.play_music_finger('指纹录入成功')
         return self._result_dict_list
     
-    def auto_identify(self, level=0, abc=0, apc=0, ksr=0):
+    def auto_identify(self, level=3, abc=0, apc=0, ksr=0):
         self._write_list = []
         self._result_dict = {}
         self._result_dict_list = []
@@ -367,8 +367,16 @@ class FPM383C:
                 print(self._result_dict)
                 if self._result_dict['param'] in self._auto_identify_param_cn:
                     print(self._auto_identify_param_cn[self._result_dict['param']] +
-                                                  self._confirmation_code_cn[
-                                                      self._result_dict['conformation_code']])
+                          self._confirmation_code_cn[
+                              self._result_dict['conformation_code']])
+                
+                # 判断指纹是否存在或者验证成功
+                if self._result_dict['param'] == '05' and self._result_dict['conformation_code'] == '09': #验证失败
+                    self.player.play_music('00099')
+                elif self._result_dict['param'] == '05' and self._result_dict['conformation_code'] == '00': #验证成功搜索到指纹
+                
+                
+                
             except OSError:
                 break
             except TypeError:
